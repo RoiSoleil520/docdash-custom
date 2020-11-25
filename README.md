@@ -1,3 +1,20 @@
+# docdash-custom
+
+基于 Docdash
+
+- 支持分类 @category
+- 支持自定义中文名 @chinese
+
+## Usage
+更新 jsdoc.json
+```
+"plugins": [
+    "node_modules/docdash-custom/plugins/custom-tags.js"
+]
+```
+
+---
+
 # Docdash
 [![Build Status](https://api.travis-ci.org/clenemt/docdash.png?branch=master)](https://travis-ci.org/clenemt/docdash) [![npm version](https://badge.fury.io/js/docdash.svg)](https://badge.fury.io/js/docdash) [![license](https://img.shields.io/npm/l/docdash.svg)](LICENSE.md)
 

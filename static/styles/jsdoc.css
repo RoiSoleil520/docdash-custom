@@ -763,3 +763,7 @@ html[data-search-mode] .level-hide {
     font-style: normal;
 
 }
+
+.sub-nav {
+  padding-left: 20px;
+}

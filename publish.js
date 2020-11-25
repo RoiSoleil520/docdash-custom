@@ -83,11 +83,11 @@ function needsSignature(doclet) {
             }
         }
     }
-    // and namespaces that are functions get a signature (but finding them is a		
-    // bit messy)		
-    else if (doclet.kind === 'namespace' && doclet.meta && doclet.meta.code &&		
-        doclet.meta.code.type && doclet.meta.code.type.match(/[Ff]unction/)) {		
-        needsSig = true;		
+    // and namespaces that are functions get a signature (but finding them is a
+    // bit messy)
+    else if (doclet.kind === 'namespace' && doclet.meta && doclet.meta.code &&
+        doclet.meta.code.type && doclet.meta.code.type.match(/[Ff]unction/)) {
+        needsSig = true;
     }
 
     return needsSig;
@@ -358,35 +358,67 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
                 if (docdash.static && members.find(function (m) { return m.scope === 'static'; } )) {
                     itemsNav += "<ul class='members'>";
 
-                    members.forEach(function (member) {
-                        if (!member.scope === 'static') return;
+                    var memberCategory = groupByCategory(members)
+                    memberCategory.forEach((member) => {
+                      if (member.category) {
                         itemsNav += "<li data-type='member'";
                         if(docdash.collapse)
                             itemsNav += " style='display: none;'";
                         itemsNav += ">";
-                        itemsNav += linkto(member.longname, member.name);
-                        itemsNav += "</li>";
-                    });
+                        itemsNav += "<ul class='sub-nav'>";
+                        itemsNav += "<p class='sub-nav-title'>"+member.category+"</p>";
+                      }
+                      member.data.forEach((submember=> {
+                        if (!member.scope === 'static') return;
+                        itemsNav += "<li>";
+                        var name = submember.name
 
+                        if (submember.chinese) {
+                          name= submember.chinese +'：'+ name
+                        }
+                        itemsNav += linkto(submember.longname, name);
+                        itemsNav += "</li>";
+                      }))
+                      if (member.category) {
+                        itemsNav += "</ul>";
+                        itemsNav += "</li>";
+                      }
+                    })
                     itemsNav += "</ul>";
                 }
 
                 if (methods.length) {
                     itemsNav += "<ul class='methods'>";
 
-                    methods.forEach(function (method) {
-                        if (docdash.static === false && method.scope === 'static') return;
-                        if (docdash.private === false && method.access === 'private') return;
-
+                    var methodCategory = groupByCategory(methods)
+                    methodCategory.forEach((method) => {
+                      if (method.category) {
                         itemsNav += "<li data-type='method'";
                         if(docdash.collapse)
                             itemsNav += " style='display: none;'";
                         itemsNav += ">";
-                        itemsNav += linkto(method.longname, method.name);
-                        itemsNav += "</li>";
-                    });
+                        itemsNav += "<ul class='sub-nav'>";
+                        itemsNav += "<p class='sub-nav-title'>"+method.category+"</p>";
+                      }
+                      method.data.forEach((submethod=> {
+                        if (docdash.static === false && submethod.scope === 'static') return;
+                        if (docdash.private === false && submethod.access === 'private') return;
+                        itemsNav += "<li>";
+                        var name = submethod.name
 
+                        if (submethod.chinese) {
+                          name= submethod.chinese +'：'+ name
+                        }
+                        itemsNav += linkto(submethod.longname, name);
+                        itemsNav += "</li>";
+                      }))
+                      if (method.category) {
+                        itemsNav += "</ul>";
+                        itemsNav += "</li>";
+                      }
+                    })
                     itemsNav += "</ul>";
+
                 }
 
                 itemsSeen[item.longname] = true;
@@ -400,6 +432,30 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
     }
 
     return nav;
+}
+
+function groupByCategory(arr) {
+  var map = {}
+  var dest = []
+  for (var i = 0; i < arr.length; i++) {
+    var ai = arr[i]
+    if (!map[ai.category]) {
+      dest.push({
+        category: ai.category,
+        data: [ai]
+      })
+      map[ai.category] = ai
+    } else {
+      for (var j = 0; j < dest.length; j++) {
+        var dj = dest[j]
+        if (dj.category == ai.category) {
+          dj.data.push(ai)
+          break
+        }
+      }
+    }
+  }
+  return dest
 }
 
 function linktoTutorial(longName, name) {
@@ -579,30 +635,9 @@ exports.publish = function(taffyData, opts, tutorials) {
 
     // update outdir if necessary, then create outdir
     var packageInfo = ( find({kind: 'package'}) || [] ) [0];
-    if (packageInfo) {
-        var subdirs = [outdir];
-
-        if (packageInfo.name) {
-            var packageName = packageInfo.name.split('/');
-
-            if (packageName.length > 1 && docdash.scopeInOutputPath !== false) {
-                subdirs.push(packageName[0]);
-            }
-
-            if (docdash.nameInOutputPath !== false) {
-                subdirs.push((packageName.length > 1 ? packageName[1] : packageName[0]));
-            }
-        }
-
-        if (packageInfo.version && docdash.versionInOutputPath !== false) {
-            subdirs.push(packageInfo.version);
-        }
-
-        if (subdirs.length > 1) {
-            outdir = path.join.apply(null, subdirs);
-        }
+    if (packageInfo && packageInfo.name) {
+        outdir = path.join( outdir, packageInfo.name, (packageInfo.version || '') );
     }
-    
     fs.mkPath(outdir);
 
     // copy the template's static files to outdir
