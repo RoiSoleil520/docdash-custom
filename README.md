@@ -1,4 +1,4 @@
-# docdash-custom
+# docdash-custom-nav
 
 基于 Docdash
 
@@ -9,7 +9,7 @@
 更新 jsdoc.json
 ```
 "plugins": [
-    "node_modules/docdash-custom/plugins/custom-tags.js"
+    "node_modules/docdash-custom-nav/plugins/custom-tags.js"
 ]
 ```
 
