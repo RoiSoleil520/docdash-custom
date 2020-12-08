@@ -181,7 +181,7 @@ tt, code, kbd, samp {
 
 #main {
   float: right;
-  width: calc(100% - 240px);
+  width: calc(100% - 340px);
 }
 
 header {
@@ -208,7 +208,7 @@ section {
 nav {
   float: left;
   display: block;
-  width: 250px;
+  width: 350px;
   background: #fff;
   overflow: auto;
   position: fixed;
@@ -269,6 +269,10 @@ nav > ul {
   padding: 0 10px;
 }
 
+li.item {
+  padding: 15px 0;
+}
+
 nav > ul > li > a {
   color: #606;
   margin-top: 10px;
@@ -281,7 +285,7 @@ nav ul ul a {
 
 nav ul ul a,
 nav ul ul a:active {
-  padding-left: 20px
+  padding-left: 10px
 }
 
 nav h2 {
@@ -766,4 +770,8 @@ html[data-search-mode] .level-hide {
 
 .sub-nav {
   padding-left: 20px;
+}
+
+.sub-nav.global {
+  padding-left: 0;
 }

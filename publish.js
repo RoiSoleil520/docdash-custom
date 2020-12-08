@@ -359,31 +359,7 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
                     itemsNav += "<ul class='members'>";
 
                     var memberCategory = groupByCategory(members)
-                    memberCategory.forEach((member) => {
-                      if (member.category) {
-                        itemsNav += "<li data-type='member'";
-                        if(docdash.collapse)
-                            itemsNav += " style='display: none;'";
-                        itemsNav += ">";
-                        itemsNav += "<ul class='sub-nav'>";
-                        itemsNav += "<p class='sub-nav-title'>"+member.category+"</p>";
-                      }
-                      member.data.forEach((submember=> {
-                        if (!member.scope === 'static') return;
-                        itemsNav += "<li>";
-                        var name = submember.name
-
-                        if (submember.chinese) {
-                          name= submember.chinese +'：'+ name
-                        }
-                        itemsNav += linkto(submember.longname, name);
-                        itemsNav += "</li>";
-                      }))
-                      if (member.category) {
-                        itemsNav += "</ul>";
-                        itemsNav += "</li>";
-                      }
-                    })
+                    itemsNav += buildCategoryDom(memberCategory, 'member');
                     itemsNav += "</ul>";
                 }
 
@@ -391,32 +367,7 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
                     itemsNav += "<ul class='methods'>";
 
                     var methodCategory = groupByCategory(methods)
-                    methodCategory.forEach((method) => {
-                      if (method.category) {
-                        itemsNav += "<li data-type='method'";
-                        if(docdash.collapse)
-                            itemsNav += " style='display: none;'";
-                        itemsNav += ">";
-                        itemsNav += "<ul class='sub-nav'>";
-                        itemsNav += "<p class='sub-nav-title'>"+method.category+"</p>";
-                      }
-                      method.data.forEach((submethod=> {
-                        if (docdash.static === false && submethod.scope === 'static') return;
-                        if (docdash.private === false && submethod.access === 'private') return;
-                        itemsNav += "<li>";
-                        var name = submethod.name
-
-                        if (submethod.chinese) {
-                          name= submethod.chinese +'：'+ name
-                        }
-                        itemsNav += linkto(submethod.longname, name);
-                        itemsNav += "</li>";
-                      }))
-                      if (method.category) {
-                        itemsNav += "</ul>";
-                        itemsNav += "</li>";
-                      }
-                    })
+                    itemsNav += buildCategoryDom(methodCategory, 'method');
                     itemsNav += "</ul>";
 
                 }
@@ -434,6 +385,79 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
     return nav;
 }
 
+/**
+ * dom 根据数组分类
+ * @param {arr} arrCategory groupByCategory(arr) 处理数组后的返回结果
+ */
+function buildCategoryDom(arrCategory, type = 'method') {
+  let domNav = ''
+  var docdash = env && env.conf && env.conf.docdash || {};
+  arrCategory.forEach((item) => {
+    if (item.category) {
+      domNav += "<li data-type='" + type + "'";
+      if(docdash.collapse)
+          domNav += " style='display: none;'";
+      domNav += ">";
+      domNav += "<ul class='sub-nav'>";
+      domNav += "<p class='sub-nav-title'>"+item.category+"</p>";
+    }
+    item.data.forEach((subitem=> {
+      if (type === 'method') {
+        if (docdash.static === false && subitem.scope === 'static') return;
+        if (docdash.private === false && subitem.access === 'private') return;
+      }
+      if (type === 'member') {
+        if (!item.scope === 'static') return;
+      }
+      domNav += "<li class='item'>";
+      var name = subitem.name
+
+      if (subitem.chinese) {
+        name= subitem.chinese +'：'+ name
+      }
+      domNav += linkto(subitem.longname, name);
+      domNav += "</li>";
+    }))
+    if (item.category) {
+      domNav += "</ul>";
+      domNav += "</li>";
+    }
+  })
+  return domNav
+}
+
+function buildCategoryDomOfGlobals(arrCategory, seen) {
+  let domNav = ''
+  var docdash = env && env.conf && env.conf.docdash || {};
+  arrCategory.forEach((item) => {
+    if (item.category) {
+      domNav += "<ul class='sub-nav global'>";
+      domNav += "<p class='sub-nav-title'>"+item.category+"</p>";
+    }
+    item.data.forEach((subitem=> {
+      if ( (docdash.typedefs || subitem.kind !== 'typedef') && !hasOwnProp.call(seen, subitem.longname) ) {
+        domNav += "<li class='item'>";
+        var name = subitem.name
+
+        if (subitem.chinese) {
+          name= subitem.chinese +'：'+ name
+        }
+        domNav += linkto(subitem.longname, name);
+        domNav += "</li>";
+      }
+    }))
+    if (item.category) {
+      domNav += "</ul>";
+    }
+  })
+  return domNav
+}
+
+/**
+ * arr 根据 category 属性进行分类
+ * @param {array} arr 需要处理的数组
+ * @returns {array}
+ */
 function groupByCategory(arr) {
   var map = {}
   var dest = []
@@ -514,13 +538,15 @@ function buildNav(members) {
 
     if (members.globals.length) {
         var globalNav = '';
-
-        members.globals.forEach(function(g) {
-            if ( (docdash.typedefs || g.kind !== 'typedef') && !hasOwnProp.call(seen, g.longname) ) {
-                globalNav += '<li>' + linkto(g.longname, g.name) + '</li>';
-            }
-            seen[g.longname] = true;
-        });
+        var globalsCategory = groupByCategory(members.globals)
+        globalNav += buildCategoryDomOfGlobals(globalsCategory, seen)
+        // members.globals.forEach(function(g) {
+        //   console.log('g: ', g.category);
+        //     if ( (docdash.typedefs || g.kind !== 'typedef') && !hasOwnProp.call(seen, g.longname) ) {
+        //         globalNav += '<li>' + linkto(g.longname, g.name) + '</li>';
+        //     }
+        //     seen[g.longname] = true;
+        // });
 
         if (!globalNav) {
             // turn the heading into a link so you can actually get to the global page
