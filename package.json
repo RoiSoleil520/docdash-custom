@@ -1,6 +1,6 @@
 {
   "name": "docdash-custom-nav",
-  "version": "1.0.3",
+  "version": "1.0.7",
   "description": "A clean, responsive documentation template theme for JSDoc 3 inspired by lodash and minami",
   "main": "publish.js",
   "scripts": {
